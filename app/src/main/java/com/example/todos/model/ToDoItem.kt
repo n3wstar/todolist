@@ -12,8 +12,8 @@ enum class Importance{
 
 fun importanceFromJson(name: String?): Importance {
     return when (name) {
-        "неважная" -> Importance.LOW
-        "важная" -> Importance.HIGH
+        "низкая" -> Importance.LOW
+        "высокая" -> Importance.HIGH
         else -> Importance.NORMAL
     }
 }

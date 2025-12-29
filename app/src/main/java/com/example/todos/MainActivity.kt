@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.todos.model.ToDoItem
+import com.example.todos.pages.ToDoEditScreen
 import com.example.todos.storage.FileStorage
 import com.example.todos.ui.theme.ToDosTheme
 
@@ -28,27 +29,8 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ToDosTheme {
-                // A surface container using the 'background' color from the theme
-                Surface {
-                    Text(text = "ToDos App")
-                }
+                ToDoEditScreen()
             }
         }
-    }
-}
-
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    ToDosTheme {
-        Greeting("Android")
     }
 }
