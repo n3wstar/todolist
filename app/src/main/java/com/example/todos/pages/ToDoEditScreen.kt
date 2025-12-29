@@ -181,7 +181,6 @@ fun ColorPicker(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.horizontalScroll(rememberScrollState())
         ) {
-            // Если выбран цвет из градиента, рисуем его первым
             selectedGradientColor?.let { color ->
                 Box(
                     modifier = Modifier
@@ -202,7 +201,6 @@ fun ColorPicker(
                 }
             }
 
-            // Стандартные цвета
             val presetColors = listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow)
             presetColors.forEach { color ->
                 Box(
@@ -224,7 +222,6 @@ fun ColorPicker(
                 }
             }
 
-            // Квадратик градиента для выбора любого цвета
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -244,7 +241,7 @@ fun ColorPicker(
                 initialColor = selectedGradientColor ?: Color.White,
                 onDismiss = { showDialog = false },
                 onColorSelected = { color ->
-                    selectedGradientColor = color // заменяем текущий градиентный цвет
+                    selectedGradientColor = color
                     onColorSelected(color)
                     showDialog = false
                 }
@@ -284,7 +281,6 @@ fun ColorPickerDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Широкая полоска градиента для выбора цвета
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -313,7 +309,6 @@ fun ColorPickerDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Квадратик текущего цвета (прицел)
                 Box(
                     modifier = Modifier
                         .size(50.dp)
