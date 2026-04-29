@@ -22,7 +22,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val storage = FileStorage(this)
-        val repository = TodoRepository(storage)
+        val remote = TodoRemoteDataSource()
+
+        val repository = TodoRepository(storage, remote)
         val viewModel = TodoViewModel(repository)
 
         setContent {
