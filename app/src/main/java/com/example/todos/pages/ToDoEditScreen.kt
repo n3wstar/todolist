@@ -20,43 +20,107 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.example.todos.TodoItemUI
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-
+import java.util.UUID
 
 @Composable
-fun ToDoEditScreen() {
-    var text by remember { mutableStateOf("") }
-    var isDone by remember { mutableStateOf(false) }
+fun ToDoEditScreenWrapper(
+    item: TodoItemUI?,
+    onSave: (TodoItemUI) -> Unit
+) {
+    var text by remember { mutableStateOf(item?.text ?: "") }
+    var isDone by remember { mutableStateOf(item?.isDone ?: false) }
     var importance by remember { mutableStateOf(Importance.NORMAL) }
     var deadline by remember { mutableStateOf<Long?>(null) }
-    var color by remember { mutableStateOf(Color.White) }
+    var color by remember { mutableStateOf<Color?>(null) }
+
+    ToDoEditScreen(
+        text = text,
+        isDone = isDone,
+        importance = importance,
+        deadline = deadline,
+        color = color,
+
+        onTextChange = { text = it },
+        onDoneChange = { isDone = it },
+        onImportanceChange = { importance = it },
+        onDeadlineChange = { deadline = it },
+        onColorChange = { color = it },
+
+        onSaveClick = {
+            onSave(
+                TodoItemUI(
+                    uid = item?.uid ?: UUID.randomUUID().toString(),
+                    text = text,
+                    isDone = isDone
+                )
+            )
+        }
+    )
+}
+@Composable
+fun ToDoEditScreen(
+    text: String,
+    isDone: Boolean,
+    importance: Importance,
+    deadline: Long?,
+    color: Color?,
+
+    onTextChange: (String) -> Unit,
+    onDoneChange: (Boolean) -> Unit,
+    onImportanceChange: (Importance) -> Unit,
+    onDeadlineChange: (Long?) -> Unit,
+    onColorChange: (Color?) -> Unit,
+
+    onSaveClick: () -> Unit
+) {
+
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(20.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+
         Title()
 
-        TodoTextField(text) { text = it }
+        TodoTextField(
+            text = text,
+            onTextChange = onTextChange
+        )
 
+        DeadlinePicker(
+            deadline = deadline,
+            onDateSelected = onDeadlineChange
+        )
 
-        DeadlinePicker(deadline) { deadline = it }
-
-        DoneCheckbox(isDone) { isDone = it }
+        DoneCheckbox(
+            isDone = isDone,
+            onChecked = onDoneChange
+        )
 
         ColorPicker(
             selectedColor = color,
-            onColorSelected = { color = it }
+            onColorSelected = onColorChange
         )
 
-        ImportanceSelector(importance) { importance = it }
+        ImportanceSelector(
+            selected = importance,
+            onSelect = onImportanceChange
+        )
+
+        Button(
+            onClick = onSaveClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Сохранить")
+        }
     }
 }
-
 
 @Composable
 private fun Title() {
@@ -67,8 +131,6 @@ private fun Title() {
     )
 }
 
-
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun TodoTextField(
     text: String,
@@ -85,7 +147,7 @@ private fun TodoTextField(
 
 enum class Importance { LOW, NORMAL, HIGH }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 private fun ImportanceSelector(
     selected: Importance,
@@ -171,7 +233,12 @@ fun ColorPicker(
     onColorSelected: (Color) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
-    var selectedGradientColor by remember { mutableStateOf<Color?>(null) }
+
+    var colors by remember {
+        mutableStateOf(
+            listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow)
+        )
+    }
 
     Column {
         Text("Цвет", fontWeight = FontWeight.Medium)
@@ -181,75 +248,72 @@ fun ColorPicker(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.horizontalScroll(rememberScrollState())
         ) {
-            selectedGradientColor?.let { color ->
+
+
+            colors.forEach { color ->
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .background(color)
-                        .border(2.dp, Color.Black)
+                        .border(
+                            1.dp,
+                            if (selectedColor == color) Color.Black else Color.Gray
+                        )
                         .clickable { onColorSelected(color) },
-                    contentAlignment = Alignment.TopStart
+                    contentAlignment = Alignment.Center
                 ) {
                     if (selectedColor == color) {
-                        Text(
-                            "✓",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(2.dp)
-                        )
+                        Text("✓", fontWeight = FontWeight.Bold)
                     }
                 }
             }
 
-            val presetColors = listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow)
-            presetColors.forEach { color ->
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(color)
-                        .border(1.dp, Color.Gray)
-                        .clickable { onColorSelected(color) },
-                    contentAlignment = Alignment.TopStart
-                ) {
-                    if (selectedColor == color) {
-                        Text(
-                            "✓",
-                            color = Color.Black,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(2.dp)
-                        )
-                    }
-                }
-            }
 
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Magenta)
+                        Brush.horizontalGradient(
+                            listOf(
+                                Color.Red,
+                                Color.Yellow,
+                                Color.Green,
+                                Color.Cyan,
+                                Color.Blue,
+                                Color.Magenta
+                            )
                         )
                     )
                     .border(1.dp, Color.Gray)
                     .clickable { showDialog = true }
-            )
+            ) {
+                if (selectedColor != null && selectedColor !in colors) {
+                    Text("✓", fontWeight = FontWeight.Bold)
+                }
+            }
         }
 
-        // Диалог выбора цвета через градиент
         if (showDialog) {
             ColorPickerDialog(
-                initialColor = selectedGradientColor ?: Color.White,
+                initialColor = selectedColor ?: Color.White,
                 onDismiss = { showDialog = false },
-                onColorSelected = { color ->
-                    selectedGradientColor = color
-                    onColorSelected(color)
+                onColorSelected = { newColor ->
+
+
+                    colors = if (newColor !in colors) {
+                        listOf(newColor) + colors
+                    } else {
+                        colors
+                    }
+
+                    onColorSelected(newColor)
+
                     showDialog = false
                 }
             )
         }
     }
 }
-
 
 @Composable
 fun ColorPickerDialog(
