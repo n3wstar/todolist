@@ -11,26 +11,22 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.todos.model.ToDoItem
 import com.example.todos.pages.ToDoEditScreen
+import com.example.todos.repository.TodoRepository
 import com.example.todos.storage.FileStorage
 import com.example.todos.ui.theme.ToDosTheme
+import com.example.todos.viewModel.TodoViewModel
 
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
         super.onCreate(savedInstanceState)
 
         val storage = FileStorage(this)
-        storage.loadFromFile()
-
-        val item = ToDoItem(text = "накормить кота")
-        storage.add(item)
-
-        storage.remove(item.uid)
+        val repository = TodoRepository(storage)
+        val viewModel = TodoViewModel(repository)
 
         setContent {
-            ToDosTheme {
-                NavGraph()
-            }
+            NavGraph(viewModel)
         }
     }
 }

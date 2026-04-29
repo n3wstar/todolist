@@ -1,27 +1,27 @@
 package com.example.todos
 
 import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.*
 import com.example.todos.pages.*
+import com.example.todos.viewModel.TodoViewModel
 
 
-data class TodoItemUI(
-    val uid: String,
-    val text: String,
-    val isDone: Boolean
-)
 @Composable
-fun NavGraph() {
+fun NavGraph(viewModel: TodoViewModel) {
 
     val navController = rememberNavController()
+    val todos by viewModel.todos.collectAsStateWithLifecycle()
 
-    var items by remember { mutableStateOf(listOf<TodoItemUI>()) }
-
-    NavHost(navController = navController, startDestination = "list") {
+    NavHost(
+        navController = navController,
+        startDestination = "list"
+    ) {
 
         composable("list") {
+
             TodoListScreen(
-                items = items,
+                items = todos,
                 onAddClick = {
                     navController.navigate("edit")
                 },
@@ -29,27 +29,25 @@ fun NavGraph() {
                     navController.navigate("edit?uid=${item.uid}")
                 },
                 onDelete = { uid ->
-                    items = items.filter { it.uid != uid }
+                    viewModel.delete(uid)
                 }
             )
         }
 
+        composable("edit?uid={uid}") { backStack ->
 
-        composable("edit?uid={uid}") { backStackEntry ->
+            val uid = backStack.arguments?.getString("uid")
 
-            val uid = backStackEntry.arguments?.getString("uid")
-            val existingItem = items.find { it.uid == uid }
+            val item = uid?.let { viewModel.getById(it) }
 
             ToDoEditScreenWrapper(
-                item = existingItem,
-                onSave = { newItem ->
+                item = item,
+                onSave = { savedItem ->
 
-                    items = if (existingItem == null) {
-                        items + newItem
+                    if (item == null) {
+                        viewModel.add(savedItem)
                     } else {
-                        items.map {
-                            if (it.uid == newItem.uid) newItem else it
-                        }
+                        viewModel.update(savedItem)
                     }
 
                     navController.popBackStack()

@@ -14,28 +14,43 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.todos.TodoItemUI
+import com.example.todos.model.Importance
+import com.example.todos.model.ToDoItem
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
 
+
 @Composable
 fun ToDoEditScreenWrapper(
-    item: TodoItemUI?,
-    onSave: (TodoItemUI) -> Unit
+    item: ToDoItem?,
+    onSave: (ToDoItem) -> Unit
 ) {
-    var text by remember { mutableStateOf(item?.text ?: "") }
-    var isDone by remember { mutableStateOf(item?.isDone ?: false) }
-    var importance by remember { mutableStateOf(Importance.NORMAL) }
-    var deadline by remember { mutableStateOf<Long?>(null) }
-    var color by remember { mutableStateOf<Color?>(null) }
+
+    var text by remember(item) { mutableStateOf(item?.text ?: "") }
+    var isDone by remember(item) { mutableStateOf(item?.isDone ?: false) }
+
+    var importance by remember(item) {
+        mutableStateOf(item?.importance ?: Importance.NORMAL)
+    }
+
+    var deadline by remember(item) {
+        mutableStateOf(item?.deadline)
+    }
+
+    var color by remember(item) {
+        mutableStateOf(
+            item?.color?.let { Color(it) } ?: Color.Red
+        )
+    }
 
     ToDoEditScreen(
         text = text,
@@ -48,14 +63,17 @@ fun ToDoEditScreenWrapper(
         onDoneChange = { isDone = it },
         onImportanceChange = { importance = it },
         onDeadlineChange = { deadline = it },
-        onColorChange = { color = it },
+        onColorChange = { color = it ?: Color.White },
 
         onSaveClick = {
             onSave(
-                TodoItemUI(
+                ToDoItem(
                     uid = item?.uid ?: UUID.randomUUID().toString(),
                     text = text,
-                    isDone = isDone
+                    isDone = isDone,
+                    importance = importance,
+                    deadline = deadline,
+                    color = color.toArgb()
                 )
             )
         }
@@ -67,13 +85,13 @@ fun ToDoEditScreen(
     isDone: Boolean,
     importance: Importance,
     deadline: Long?,
-    color: Color?,
+    color: Color,
 
     onTextChange: (String) -> Unit,
     onDoneChange: (Boolean) -> Unit,
     onImportanceChange: (Importance) -> Unit,
     onDeadlineChange: (Long?) -> Unit,
-    onColorChange: (Color?) -> Unit,
+    onColorChange: (Color) -> Unit,
 
     onSaveClick: () -> Unit
 ) {
@@ -144,9 +162,6 @@ private fun TodoTextField(
         maxLines = 5
     )
 }
-
-enum class Importance { LOW, NORMAL, HIGH }
-
 
 @Composable
 private fun ImportanceSelector(
@@ -229,85 +244,79 @@ private fun DoneCheckbox(
 
 @Composable
 fun ColorPicker(
-    selectedColor: Color?,
+    selectedColor: Color,
     onColorSelected: (Color) -> Unit
 ) {
     var showDialog by remember { mutableStateOf(false) }
 
-    var colors by remember {
-        mutableStateOf(
-            listOf(Color.Red, Color.Green, Color.Blue, Color.Yellow)
-        )
-    }
+    val baseColors = listOf(
+        Color.Red,
+        Color.Green,
+        Color.Blue,
+        Color.Yellow
+    )
+
+    val isCustom = selectedColor !in baseColors
 
     Column {
         Text("Цвет", fontWeight = FontWeight.Medium)
 
         Row(
-            verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             modifier = Modifier.horizontalScroll(rememberScrollState())
         ) {
 
+            baseColors.forEach { color ->
+                val selected = color.toArgb() == selectedColor.toArgb()
 
-            colors.forEach { color ->
                 Box(
                     modifier = Modifier
                         .size(40.dp)
                         .background(color)
-                        .border(
-                            1.dp,
-                            if (selectedColor == color) Color.Black else Color.Gray
-                        )
+                        .border(1.dp, if (selected) Color.Black else Color.Gray)
                         .clickable { onColorSelected(color) },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedColor == color) {
-                        Text("✓", fontWeight = FontWeight.Bold)
-                    }
+                    if (selected) Text("✓")
                 }
             }
 
+            // кастомный цвет показываем отдельно
+            if (isCustom) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(selectedColor)
+                        .border(2.dp, Color.Black),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("✓")
+                }
+            }
 
+            // кнопка палитры
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .background(
                         Brush.horizontalGradient(
                             listOf(
-                                Color.Red,
-                                Color.Yellow,
-                                Color.Green,
-                                Color.Cyan,
-                                Color.Blue,
-                                Color.Magenta
+                                Color.Red, Color.Yellow, Color.Green,
+                                Color.Cyan, Color.Blue, Color.Magenta
                             )
                         )
                     )
                     .border(1.dp, Color.Gray)
                     .clickable { showDialog = true }
-            ) {
-                if (selectedColor != null && selectedColor !in colors) {
-                    Text("✓", fontWeight = FontWeight.Bold)
-                }
-            }
+            )
         }
 
         if (showDialog) {
             ColorPickerDialog(
-                initialColor = selectedColor ?: Color.White,
+                initialColor = selectedColor,
                 onDismiss = { showDialog = false },
-                onColorSelected = { newColor ->
-
-
-                    colors = if (newColor !in colors) {
-                        listOf(newColor) + colors
-                    } else {
-                        colors
-                    }
-
-                    onColorSelected(newColor)
-
+                onColorSelected = {
+                    onColorSelected(it)
                     showDialog = false
                 }
             )

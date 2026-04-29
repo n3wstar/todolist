@@ -6,14 +6,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.todos.TodoItemUI
+import androidx.compose.ui.unit.sp
+import com.example.todos.model.ToDoItem
 
 @Composable
 fun TodoListScreen(
-    items: List<TodoItemUI>,
+    items: List<ToDoItem>,
     onAddClick: () -> Unit,
-    onItemClick: (TodoItemUI) -> Unit,
+    onItemClick: (ToDoItem) -> Unit,
     onDelete: (String) -> Unit
 ) {
 
@@ -30,7 +33,10 @@ fun TodoListScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            items(items) { item ->
+
+            items(items = items,
+                key = {it.uid}
+            ) { item ->
 
                 SwipeToDeleteItem(
                     item = item,
@@ -45,26 +51,29 @@ fun TodoListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeToDeleteItem(
-    item: TodoItemUI,
+    item: ToDoItem,
     onDelete: () -> Unit,
     onClick: () -> Unit
 ) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = {
-            if (it == SwipeToDismissBoxValue.EndToStart) {
+    val state = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            if (value == SwipeToDismissBoxValue.EndToStart) {
                 onDelete()
+                true
+            } else {
+                true
             }
-            true
         }
     )
 
     SwipeToDismissBox(
-        state = dismissState,
+        state = state,
+        enableDismissFromStartToEnd = false,
         backgroundContent = {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(end = 16.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Text("Delete")
@@ -75,10 +84,16 @@ fun SwipeToDeleteItem(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp),
-                onClick = onClick
+                onClick = onClick,
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(item.color)
+                )
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(item.text)
+                    Text(
+                        item.text,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold)
                     Text(if (item.isDone) "✔ Выполнено" else "Не выполнено")
                 }
             }

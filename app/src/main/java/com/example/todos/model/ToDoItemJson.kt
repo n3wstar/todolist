@@ -15,11 +15,7 @@ fun parseTodoItem(json: JSONObject): ToDoItem? {
             json.optString("importance", "")
         )
 
-        val color = if (json.has("color")) {
-            json.getInt("color")
-        } else {
-            Color.WHITE
-        }
+        val color = json.optInt("color", android.graphics.Color.RED)
 
         val deadline = if (json.has("deadline")) {
             json.getLong("deadline")
@@ -61,9 +57,7 @@ val ToDoItem.json: JSONObject
             )
         }
 
-        if (color != Color.WHITE) {
-            json.put("color", color)
-        }
+        json.put("color", color)
 
 
         if (deadline != null) {

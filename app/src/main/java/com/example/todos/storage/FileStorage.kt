@@ -83,4 +83,10 @@ class FileStorage(private val context: Context, private val fileName: String = "
             logger.error("Ошибка при загрузке файла", e)
         }
     }
+
+    fun getAll(): List<ToDoItem> = items
+
+    fun getById(uid: String): ToDoItem? {
+        return items.find { it.uid == uid }
+    }
 }

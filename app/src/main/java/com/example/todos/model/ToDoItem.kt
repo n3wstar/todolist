@@ -22,7 +22,7 @@ data class ToDoItem(
     val uid : String = UUID.randomUUID().toString(),
     val text : String,
     val importance: Importance = Importance.NORMAL,
-    val color: Int = Color.WHITE,
+    val color: Int = Color.RED,
     val deadline: Long? = null,
     val isDone: Boolean = false
 )
