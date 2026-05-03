@@ -1,14 +1,16 @@
 package com.example.todos.repository
 
-import com.example.todos.TodoRemoteDataSource
 import com.example.todos.model.ToDoItem
 import com.example.todos.storage.FileStorage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 class TodoRepository(
     private val storage: FileStorage,
-    private val remote: TodoRemoteDataSource
+    private val remote: com.example.todos.remote.TodoRemoteDataSource
 ) {
 
     private val _todos = MutableStateFlow<List<ToDoItem>>(emptyList())
@@ -19,39 +21,53 @@ class TodoRepository(
     }
 
     fun load() {
-        storage.loadFromFile()
-        
-        val local = storage.getAll()
+        CoroutineScope(Dispatchers.IO).launch {
+            val local = storage.getAll()
 
-        // имитация запроса на сервер
-        remote.loadTodos()
-
-        _todos.value = local
+            try {
+                val server = remote.load()
+                storage.replaceAll(server)
+                _todos.value = server
+            } catch (e: Exception) {
+                _todos.value = local
+            }
+        }
     }
 
     fun add(item: ToDoItem) {
-        storage.add(item)
-        remote.sendTodo(item)
-        _todos.value = storage.getAll()
+        CoroutineScope(Dispatchers.IO).launch {
+            storage.add(item)
+
+            val updated = remote.sync(storage.getAll())
+            storage.replaceAll(updated)
+            _todos.value = updated
+        }
     }
 
     fun update(item: ToDoItem) {
-        storage.remove(item.uid)
-        storage.add(item)
+        CoroutineScope(Dispatchers.IO).launch {
+            storage.remove(item.uid)
+            storage.add(item)
 
-        remote.sendTodo(item)
-
-        _todos.value = storage.getAll()
+            val updated = remote.sync(storage.getAll())
+            storage.replaceAll(updated)
+            _todos.value = updated
+        }
     }
 
     fun delete(uid: String) {
-        storage.remove(uid)
-        remote.deleteTodo(uid)
+        CoroutineScope(Dispatchers.IO).launch {
+            storage.remove(uid)
 
-        _todos.value = storage.getAll()
+            val updated = remote.sync(storage.getAll())
+            storage.replaceAll(updated)
+            _todos.value = updated
+        }
     }
 
     fun getById(uid: String): ToDoItem? {
         return storage.getById(uid)
     }
 }
+
+

@@ -6,6 +6,7 @@ import com.example.todos.model.json
 import com.example.todos.model.parseTodoItem
 import org.json.JSONArray
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC.clear
 import java.io.File
 
 class FileStorage(private val context: Context, private val fileName: String = "todos.json") {
@@ -88,5 +89,10 @@ class FileStorage(private val context: Context, private val fileName: String = "
 
     fun getById(uid: String): ToDoItem? {
         return items.find { it.uid == uid }
+    }
+
+    fun replaceAll(items: List<ToDoItem>) {
+        clear()
+        items.forEach { add(it) }
     }
 }

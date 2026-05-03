@@ -10,7 +10,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.todos.model.ToDoItem
+import com.example.todos.network.NetworkToDo
 import com.example.todos.pages.ToDoEditScreen
+import com.example.todos.remote.TodoRemoteDataSource
 import com.example.todos.repository.TodoRepository
 import com.example.todos.storage.FileStorage
 import com.example.todos.ui.theme.ToDosTheme
@@ -22,7 +24,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val storage = FileStorage(this)
-        val remote = TodoRemoteDataSource()
+        val remote = TodoRemoteDataSource(NetworkToDo.api)
 
         val repository = TodoRepository(storage, remote)
         val viewModel = TodoViewModel(repository)
