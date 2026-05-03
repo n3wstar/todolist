@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.todos.data.DatabaseProvider
 import com.example.todos.model.ToDoItem
 import com.example.todos.network.NetworkToDo
 import com.example.todos.pages.ToDoEditScreen
@@ -23,10 +24,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val storage = FileStorage(this)
-        val remote = TodoRemoteDataSource(NetworkToDo.api)
+        val db = DatabaseProvider.create(this)
 
-        val repository = TodoRepository(storage, remote)
+        val api = NetworkToDo.api
+        val remote = TodoRemoteDataSource(api)
+        val repository = TodoRepository(db.todoDao(), remote)
+
         val viewModel = TodoViewModel(repository)
 
         setContent {

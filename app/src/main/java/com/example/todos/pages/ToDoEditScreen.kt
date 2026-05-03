@@ -63,7 +63,7 @@ fun ToDoEditScreenWrapper(
         onDoneChange = { isDone = it },
         onImportanceChange = { importance = it },
         onDeadlineChange = { deadline = it },
-        onColorChange = { color = it ?: Color.White },
+        onColorChange = { color = it },
 
         onSaveClick = {
             onSave(

@@ -38,7 +38,7 @@ fun NavGraph(viewModel: TodoViewModel) {
 
             val uid = backStack.arguments?.getString("uid")
 
-            val item = uid?.let { viewModel.getById(it) }
+            val item = todos.find { it.uid == uid }
 
             ToDoEditScreenWrapper(
                 item = item,
